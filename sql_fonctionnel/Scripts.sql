@@ -207,7 +207,6 @@ SELECT * FROM gestion_evenements.salles;
 SELECT * FROM gestion_evenements.artistes;
 SELECT * FROM gestion_evenements.clients;
 SELECT * FROM gestion_evenements.artistes;
-SELECT  * from gestion_evenements.reservations
 
 
 
