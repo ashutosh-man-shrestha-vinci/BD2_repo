@@ -199,7 +199,21 @@ UPDATE gestion_evenements.evenements c SET nb_places_restantes = nb_places_resta
 CREATE TRIGGER AJOUTERTRIGGER BEFORE INSERT ON gestion_evenements.reservations FOR EACH ROW EXECUTE PROCEDURE gestion_evenements.AjouterReservationTrigger();
 
 
---semaine 10
+--semaine 9
+--Ajouter la procédure de réservation d’un certain nombre de places pour tous les événements
+--d’un festival. Si une des réservations échoue, alors aucune réservation ne sera enregistrée.
+--Tester la procédure.
+--7. Ajouter les vues suivantes :
+--- Ajouter la vue qui affiche les festivals futurs (festivals pour lesquels il existe au moins un
+--événement dans le futur). Les festivals seront affichés avec leur nom, la date du premier
+--événement, la date du dernier événement et la somme des prix des tickets de chaque
+--événement le composant. Les festivals seront triés par la date du premier événement. Les
+--festivals non finalisés (sans événements) ne sont pas affichés. Tester votre vue.
+--- Ajouter la vue qui affiche ses réservations. Les réservations seront affichées avec le nom de
+--l’événement, la date de l’événement, la salle, le numéro de réservation et le nombre de
+--places réservées. Les réservations seront triées par la date de l’événement. Tester votre vue
+--en affichant les réservations d’un client particulier (id=1 par exemple).
+
 CREATE OR REPLACE FUNCTION gestion_evenements.ReserverFestival(_id_festival INTEGER , _id_client INTEGER, _nb_places INTEGER) RETURNS VOID AS $$
     DECLARE
     _evenement RECORD;
@@ -231,6 +245,39 @@ WHERE r.date_evenement = e.date_evenement
 
 SELECT * FROM gestion_evenements.reservationsClients;
 
+--semaine10
+--Ajouter une vue qui affiche tous les événements d’une salle particulière triés par date. Les
+--événements seront affichés avec les informations suivantes : son nom, sa date, sa salle, ses artistes
+--séparés par des + (ex : « Beyoncé + Eminem »), son prix et s’il est complet ou non. Tester votre vue
+--en affichant les événements de la salle dont l’id est1.
+--9. Ajouter la vue qui affiche les événements auxquels participe un artiste particulier triés par date.
+--Les événements seront affichés avec les informations suivantes : son nom, sa date, sa salle, ses
+--artistes séparés par des + (ex : « Beyoncé + Eminem »), son prix et s’il est complet ou non. Tester
+--votre vue en affichant les événements de l’artiste dont l’id est 1 .
+--10. Début Partie Java Client : Créer un programme qui se connecte à la base de données et qui affiche
+--tous les festivals futurs.
+
+CREATE OR REPLACE VIEW gestion_evenements.evenementsParSalle AS
+SELECT e.nom AS "nom_event", e.date_evenement AS "date_event", s.id_salle AS "id_salle_event",
+       s.nom AS "nom_salle_event", STRING_AGG(a.nom, ',') AS "artistes",
+       e.prix, e.nb_places_restantes = 0 AS "complet"
+FROM gestion_evenements.salles s, gestion_evenements.evenements e
+    LEFT JOIN gestion_evenements.concerts co ON e.date_evenement = co.date_evenement AND e.salle = co.salle
+    LEFT JOIN gestion_evenements.artistes a ON a.id_artiste = co.artiste
+WHERE e.salle = s.id_salle
+GROUP BY e.nom, e.date_evenement, s.id_salle, s.nom, e.prix, e.nb_places_restantes;
+
+
+CREATE OR REPLACE VIEW gestion_evenements.evenementsParArtiste AS
+SELECT e.nom AS "nom_event", e.date_evenement AS "date_event", s.id_salle AS "id_salle_event",
+       s.nom AS "nom_salle_event", STRING_AGG(a.nom, ',') AS "artistes",
+       e.prix, e.nb_places_restantes = 0 AS "complet", a.id_artiste
+FROM gestion_evenements.salles s, gestion_evenements.evenements e
+    LEFT JOIN gestion_evenements.concerts co ON e.date_evenement = co.date_evenement AND e.salle = co.salle
+    LEFT JOIN gestion_evenements.artistes a ON a.id_artiste = co.artiste
+WHERE e.salle = s.id_salle
+GROUP BY e.nom, e.date_evenement, s.id_salle, s.nom, e.prix, e.nb_places_restantes, a.id_artiste;
+
 /* TESTS */
 SELECT gestion_evenements.ajouterSalle('Palais 12', 'Bruxelles', 15000);
 SELECT gestion_evenements.ajouterSalle('La Madeleine', 'Bruxelles', 15000);
@@ -255,3 +302,5 @@ SELECT gestion_evenements.ajouterConcert(1, '2025-05-20', '20:00', 1);
 --SELECT gestion_evenements.ajouterConcert(1, '2025-05-20', '10:00', 1); --Test: tentative artiste 2 concerts au même festival
 
 SELECT gestion_evenements.ajouterReservation(1, '2025-05-20', 2, 1);
+
+SELECT * FROM gestion_evenements.evenementsParSalle WHERE id_salle_event=2;
